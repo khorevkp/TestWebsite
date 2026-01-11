@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JS Starfield</title>
+    <style>
+        body { margin: 0; background: #141428; overflow: hidden; }
+        canvas { display: block; cursor: crosshair; }
+    </style>
+</head>
+<body>
+<canvas id="starCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('starCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Constants
+    const NUMSTARS = 150;
+    let winSize = { w: window.innerWidth, h: window.innerHeight };
+    let winCenter = [winSize.w / 2, winSize.h / 2];
+    let stars = [];
+
+    // Resize handler to keep it full screen
+    window.onresize = () => {
+        winSize = { w: window.innerWidth, h: window.innerHeight };
+        canvas.width = winSize.w;
+        canvas.height = winSize.h;
+    };
+    window.onresize();
+
+    function initStar() {
+        const dir = Math.random() * Math.PI * 2;
+        const velMult = Math.random() * 0.6 + 0.4;
+        return {
+            vel: [Math.sin(dir) * velMult, Math.cos(dir) * velMult],
+            pos: [...winCenter]
+        };
+    }
+
+    function initializeStars() {
+        for (let i = 0; i < NUMSTARS; i++) {
+            let star = initStar();
+            let steps = Math.random() * (winSize.w / 2);
+
+            // Advance star to random starting positions
+            star.pos[0] += star.vel[0] * steps;
+            star.pos[1] += star.vel[1] * steps;
+            star.vel[0] *= (steps * 0.09);
+            star.vel[1] *= (steps * 0.09);
+
+            stars.push(star);
+        }
+    }
+
+    function update() {
+        // "Clear" the screen (Black background)
+        ctx.fillStyle = 'rgb(20, 20, 40)';
+        ctx.fillRect(0, 0, winSize.w, winSize.h);
+
+        // Draw and move stars
+        ctx.fillStyle = 'rgb(255, 240, 200)';
+
+        stars.forEach(star => {
+            // Move
+            star.pos[0] += star.vel[0];
+            star.pos[1] += star.vel[1];
+
+            // Bounds check
+            if (star.pos[0] < 0 || star.pos[0] > winSize.w ||
+                star.pos[1] < 0 || star.pos[1] > winSize.h) {
+                Object.assign(star, initStar());
+            } else {
+                star.vel[0] *= 1.05;
+                star.vel[1] *= 1.05;
+            }
+
+            // Draw (as 2x2 pixel rectangles)
+            ctx.fillRect(star.pos[0], star.pos[1], 2, 2);
+        });
+
+        requestAnimationFrame(update);
+    }
+
+    // Input Management: Update center on click
+    canvas.addEventListener('mousedown', (e) => {
+        winCenter[0] = e.clientX;
+        winCenter[1] = e.clientY;
+    });
+
+    // Start
+    initializeStars();
+    update();
+</script>
+</body>
+</html>
